@@ -1,0 +1,41 @@
+const saver = require('../saver/app.js')
+	, Configs = require('../../../config.js')
+;
+
+const configs = Configs()
+	, dbUri = configs.MONGODB_URI
+;
+
+const scheduleSchema = {
+	Location: String
+	, Event: String
+	, About: String
+	, Name: String
+	, Email: String
+	, Info: String
+	, MeetingLength: Number
+	, Timezone: Array
+	, Dates: Array
+	, StartTimes: Array
+	, EndTimes: Array
+}
+
+// USING DB CALLED MONGODB
+// THINGS TO STUDY: MONGODB and MONGOOSE
+function getScheduleSchema(mongooseModule) {
+	const schema = new mongooseModule.Schema(scheduleSchema, 
+		{usePushEach: true , collection: 'schedules'});
+	
+	return schema;
+}
+
+ 
+module.exports = {
+	dbUri: dbUri
+	,  schedule: saver.registerSchema({
+		schema: getScheduleSchema,
+		collectionName: 'Schedule',
+		schemaName: 'schema',
+		dbUri: dbUri
+	})
+}
