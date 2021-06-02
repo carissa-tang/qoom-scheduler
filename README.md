@@ -10,7 +10,8 @@ Our project is an appointment scheduling web application on Qoom. We wanted an e
 
 ## 2. Who is it for?
 
- All Qoom users are able to use this appointment scheduling app.
+All Qoom users are able to use this appointment scheduling app.
+
 *Schedulers:*
 > - Schedulers can create events and select details such as meeting name, location, description, and length. 
 > - They then select their availability from a calendar, and input available hours. 
