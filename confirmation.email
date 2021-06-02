@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<style>
+			body {
+				font-family: sans-serif;
+				background-color: white;
+				color: #202124;
+			}
+			p {
+				line-height: 1.5;
+			}
+			ul li {
+				line-height: 1.5;
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<p>Hello {{NAME}}!</p>
+		<p>Your <b>{{EVENT_NAME}}</b> is scheduled. Below are the details for your upcoming event</p>
+		<ul>
+			<li>Location: {{LOCATION}} </li>
+			<li>Description: {{DESCRIPTION}} </li>
+			<li>Date: {{CHOSEN_DATE}} </li>
+			<li>Meeting Start Time: {{START_TIME}}</li>
+			<li>Duration: {{DURATION}} minutes </li>
+		</ul>
+		<p>If you like to reschedule or cancel, please reply back to this email.</p>
+		<div>
+			<p>Looking forward to seeing you soon! </p>
+			<p>Sincerely, <br> The Qoom Team</p>
+		</div>
+	</body>
+
+</html>
