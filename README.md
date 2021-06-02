@@ -1,11 +1,7 @@
 # Appointment Scheduler
 
 ## Project Owners
-
-Carissa Tang and Amy Palm
-
-## Links
-[Demo](https://schedule.qoom.group/schedule)
+[Demo](https://schedule.qoom.group/schedule) by Carissa Tang and Amy Palm
 
 [Sketch](https://www.sketch.com/s/ccc95fe8-758e-4f1c-9c7d-a6fd4fa175a8) by Kiae
 
