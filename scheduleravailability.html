@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	    <meta charset="utf-8" />
+	    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	    <meta name="viewport" content="width=device-width, initial-scale=1" />
+	    <title>Qoom Scheduler</title>
+	    <link rel="stylesheet" href="/scheduler/style.css" />
+	    <link rel="preconnect" href="https://fonts.gstatic.com">
+		<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+	    <script src="/scheduler/script.js" defer></script>
+	    <script>
+	    	function checktimezone(value){
+				var element = document.getElementById('otherinput');
+				if(value == ""){
+					
+					element.style.display= "block";
+					
+				}	
+				else {
+					element.style.display= "none";
+				}	
+			}
+	    </script>
+	</head>
+	<body>
+    	<header>QOOM SCHEDULER</header>
+		<hr>
+	    <main class="scheduler-container">
+			<h2>Select Availability</h2> 
+			<form id="form-two" name ="form-two" action='/schedule/shareevent' onsubmit="return validateForm()" method='post'>
+			    <section class="scheduler-box">
+			    	<div id="event-info">
+			    		<table>
+							<tbody id="tbody">
+								<tr>
+									<th><div class="row">Event Name<div class="displayeventname"></div></div></th>
+									<td>{{EVENT NAME}}</td>
+								</tr>
+								<tr>
+									<th><div class="row">Location<div class="displaylocation"></div></div>
+									</th>
+									<td>{{LOCATION}}</td>
+								</tr>
+								<tr>
+									<th><div class="row">Description<div class="displayabout"></div></div>
+									</th>
+									<td>{{DESCRIPTION}}</td>
+								</tr>
+								<tr>
+									<th><div class="row">Duration<div class="displaylength"></div></div></th>
+									<td>{{MEETING LENGTH}} minutes</td>
+								</tr>
+							</tbody>
+						</table>
+			    	</div>
+			    	<div id="hiddenform">
+						<input type="hidden" name="Event" class="eventnameinput" value="{{EVENT NAME}}" />
+			    		<input type="hidden" name="Location" class="locationinput" value="{{LOCATION}}" />
+			    		<input type="hidden" name="About" class="aboutinput" value="{{DESCRIPTION}}" />
+			    		<input type="hidden" name="Meeting Length" class="lengthinput" value="{{MEETING LENGTH}}" />
+		    		</div>
+			   </section>	
+			   <section class="scheduler-box">
+			    	<div id="availability">
+			    		<div class="scheduler-input">
+							<label for="timezone"> Select Timezone:</label> 
+							<select id="timezone" name="Timezone" onchange='checktimezone(this.value);' required>
+								<option class="timezone" value="PDT">PDT</option>
+								<option class="timezone" value="MDT">MDT</option>
+								<option class="timezone" value="CDT">CDT</option>
+								<option class="timezone" value="EDT">EDT</option>
+								<option class="timezone" value="">Other</option>
+							</select>
+							<input type="text" class="timezone" name="Timezone" id="otherinput" placeholder="e.g. ADT" style="display:none;"/>
+						</div>
+				    	<div id="originalsection">
+					    	<div class="scheduler-input">
+					        	<label>Select Date:</label>
+					        	<div>
+					        		<input type="date" id="selectdate" name="Date_0" placeholder="yyyy-mm-dd" required>
+					        	</div>
+					    	</div>
+					    	<div class="scheduler-input">
+					        	<label>What times are you available?</label>
+					        	<div id="choosetime">
+									<div id="startendinput">
+										<div>
+											<input id="starttime" type="time" name="Start Time_0_0" placeholder="--:-- --" required>
+										</div>
+										<p id="dash">-</p>
+										<div>
+											<input id="endtime" type="time" name="End Time_0_0" placeholder="--:-- --" required>
+										</div>
+									</div>
+								</div>
+								<div id="newElementIdTime"></div>
+					    	</div>
+					    	<div id="addremovebtns">
+						    	<div id="dynamicCheckTime">
+									<input type="button" value="+ Add more times" id="addtimebtn"/>
+								</div>
+							</div>
+							<hr class="greyline">
+						</div>
+					</div>
+					<div id="dynamicCheckDate">
+						<input type="button" value="+ Add Date" id="adddatebtn"/>
+					</div>
+				</section>
+			    <section class="buttons">
+			        <button type="button" class="btn-secondary" onclick="backbutton()">Back</button>
+					<button type="submit" class="btn-primary">Create Event</button>
+				</section>
+			</form>
+	    </main>
+	</body>
+	<script>
+		function validateForm() {
+			var index = "0_0";
+			var x = document.forms["form-two"]["Start Time_" + index].value;
+			var y = document.forms["form-two"]["End Time_" + index].value;
+			var x_hour = parseInt(x.slice(0, 2), 10);
+			var y_hour = parseInt(y.slice(0, 2), 10);
+		  	var x_min = parseInt(x.slice(3, 5), 10);
+			var y_min = parseInt(y.slice(3, 5), 10);
+
+			for (var i = 0; i < x.length; i++) {
+				if (x.endsWith("PM")){
+					x_hour += 12;
+				}
+				if (y.endsWith("PM")){
+					y_hour += 12;
+				}
+				if (y_hour > x_hour){
+			  		return true;	
+			  	}
+				else if (y_hour == x_hour){
+				  	if (y_min > x_min){
+				  			return true;
+				  	}
+				  	else{
+						alert("End Time must occur after Start Time");
+						return false;
+					}
+				}
+				else{
+					alert("End Time must occur after Start Time");
+					return false;
+				}
+			}
+		}
+	</script>
+</html>
