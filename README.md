@@ -1,5 +1,4 @@
 # Appointment Scheduler
-======
 
 ## 1. Project Owners
 
