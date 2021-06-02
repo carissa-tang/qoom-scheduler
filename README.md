@@ -6,6 +6,7 @@ Carissa Tang and Amy Palm
 
 ## Links
 [Demo](https://schedule.qoom.group/schedule)
+
 [Sketch](https://www.sketch.com/s/ccc95fe8-758e-4f1c-9c7d-a6fd4fa175a8) by Kiae
 
 
