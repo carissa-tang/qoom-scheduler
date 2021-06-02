@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Qoom Scheduler</title>
+		<link rel="stylesheet" href="/scheduler/style.css" />
+		<link rel="preconnect" href="https://fonts.gstatic.com">
+		<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+		<script src="/scheduler/script.js" defer></script>
+
+		<script>
+			async function send() {
+				await fetch('/email/send', {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({
+						to: document.getElementById('Email')
+							.value,
+						subject: 'Your Appointment Confirmed'
+
+							// EDIT THIS FILE TO CHANGE THE EMAIL CONTENT
+							,
+						template: 'scheduler/confirmation.email'
+
+							// EDIT THIS DATA WITH WHAT YOU WANT TO INJECT
+							,
+						data: { name: document.getElementById('username')
+								.value, location: '{{LOCATION}}', description: '{{DESCRIPTION}}', chosen_date, start_time, event_name: '{{EVENT NAME}}', duration: '{{MEETING LENGTH}}' }
+					})
+				})
+			}
+		</script>
+	</head>
+
+	<body>
+		<header>QOOM SCHEDULER</header>
+		<hr>
+		<main class="attendee-container">
+			<h2>Make an Appointment</h2>
+			<form id="createeventform" autocomplete='on' action="/thankyou" method="post">
+				<section class="attendee-box">
+					<div id="eventinfo">
+						<table>
+							<tbody id="tbody">
+								<tr>
+									<th>
+										<div class="row">Event Name<div class="displayeventname"></div>
+										</div>
+									</th>
+									<td>{{EVENT NAME}}</td>
+								</tr>
+								<tr>
+									<th>
+										<div class="row">Location<div class="displaylocation"></div>
+										</div>
+									</th>
+									<td>{{LOCATION}}</td>
+								</tr>
+								<tr>
+									<th>
+										<div class="row">Description<div class="displayabout"></div>
+										</div>
+									</th>
+									<td>{{DESCRIPTION}}</td>
+								</tr>
+								<tr>
+									<th>
+										<div class="row">Duration<div class="displaylength"></div>
+										</div>
+									</th>
+									<td>{{MEETING LENGTH}} minutes</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</section>
+
+				<section class="attendee-box" id="dates-times">
+					<p class="bluetext">Select Date and Time</p>
+				</section>
+				<section class="attendee-box">
+					<p class="bluetext">Enter Details</p>
+					<div class="attendee-input">
+						<label for="name">Name*</label>
+						<div>
+							<input type="text" id="username" name="Name" required>
+						</div>
+					</div>
+					<div class="attendee-input">
+						<label for="email">Email*</label>
+						<div>
+							<input type="email" id="Email" name="Email" required>
+						</div>
+					</div>
+					<div class="attendee-input">
+						<label for="info">Please share anything that would help prepare for our meeting.</label>
+						<div>
+							<input type="text" id="otherinfo" name="Info">
+						</div>
+					</div>
+				</section>
+				<section class="buttons">
+					<button type="submit" class="btn-primary" onclick='send()'>Confirm</button>
+				</section>
+
+			</form>
+		</main>
+	</body>
+	<script>
+		var dates = {{DATES}};
+		var starttimes = {{STARTTIMES}};
+		var endtimes = {{ENDTIMES}};
+		var duration = {{MEETING LENGTH}};
+		var tzn = {{TIMEZONE}};
+		
+		/*
+		dateWithTimeZone = (timeZone, year, month, day, hour, minute, second) => {
+		  let date = new Date(Date.UTC(year, month, day, hour, minute, second));
+		
+		  let utcDate = new Date(date.toLocaleString('en-US', { timeZone: "UTC" }));
+		  let tzDate = new Date(date.toLocaleString('en-US', { timeZone: timeZone }));
+		  let offset = utcDate.getTime() - tzDate.getTime();
+		
+		  date.setTime( date.getTime() + offset );
+		
+		  return date;
+		};*/
+		function tzninjection(){
+			var div = document.getElementById("dates-times");
+			var text = document.createElement("p");
+			text.innerHTML = "<i>*times shown in local time</i>";
+			div.appendChild(text);
+		}
+		
+		function makeButton(time, $startbtn, $divtime, $divright, $div, date) {
+			var fullstr = new Date(date + " " + time.toString() + " " + tzn.toString()).toTimeString();
+			fullstr = fullstr.slice(0, 5);
+			$startbtn.innerHTML = fullstr;
+			$startbtn.type = "button";
+			$startbtn.onclick = function () {
+				var allbtn = document.querySelectorAll(".availabletimebtn");
+				var i;
+				for (i = 0; i < allbtn.length; i++) {
+					allbtn[i].style.backgroundColor = "white";
+					allbtn[i].style.color = "";
+				}
+				this.style.backgroundColor = "#0067F4";
+				this.style.color = "white";
+				start_time = $startbtn.innerHTML;
+				chosen_date = $startbtn.closest(".availablesection").childNodes[0].childNodes[0].innerHTML;
+			};
+			$divtime.appendChild($startbtn);
+			$divright.appendChild($divtime);
+			$div.appendChild($divright);
+		}
+
+		function normXMinutes(x, x_min, i, $startbtn, $divtime, x_hour, $divright, $div, date) {
+			var newmin = parseInt(x_min) + i * duration;
+			if (newmin < 10) {
+				var time = x.replace(x_min, "0" + newmin.toString());
+			} else if (newmin > 60) {
+				var addhour = Math.floor(newmin / 60);
+				var addtime = (newmin % 60);
+				if (addtime == 0) {
+					addtime = "00";
+				}
+				var time = x.replace(x_hour, x_hour + addhour);
+				time = time.replace(x_min, addtime);
+			} else {
+				var time = x.replace(x_min, newmin.toString());
+			}
+			makeButton(time, $startbtn, $divtime, $divright, $div, date);
+		}
+
+		function divideTime(x_min, i, x, $startbtn, $divtime, x_hour, $divright, $div, date) {
+			// If "XX:00" < Start Time < "XX:60"
+			if (parseInt(x_min) + i * duration < 60) {
+				normXMinutes(x, x_min, i, $startbtn, $divtime, x_hour, $divright, $div, date);
+			}
+
+			// If Start Time > "XX:60"
+			else {
+				var addhour = Math.floor((parseInt(x_min) + i * duration) / 60);
+				var addtime = ((parseInt(x_min) + i * duration) % 60);
+				if (addtime == 0) {
+					addtime = "00";
+				} else if (addtime < 10) {
+					var time = x.replace(x_min, "0" + addtime.toString());
+				}
+				
+				if ((parseInt(x_hour) + addhour) < 10){
+					var time = x.replace(x_hour, "0" + (parseInt(x_hour) + addhour).toString());
+				}
+				else{
+					var time = x.replace(x_hour, parseInt(x_hour) + addhour);
+				}
+				time = time.replace(x_min, addtime);
+				console.log("first: " + i, date);
+				makeButton(time, $startbtn, $divtime, $divright, $div, date);
+				console.log("second: " + i, date);
+			}
+		}
+
+		function addClassName(x_min, i, x, x_hour, $divright, $div, date) {
+			const $divtime = document.createElement('div');
+			const $startbtn = document.createElement('button');
+
+			$divtime.className = "availabletime";
+			$startbtn.className = "availabletimebtn";
+			divideTime(x_min, i, x, $startbtn, $divtime, x_hour, $divright, $div, date);
+		}
+
+		function filterendtime(et, k, st, $divright, $div, date) {
+			Object.keys(et)
+				.forEach(e => {
+					if (e.endsWith(k.slice(k.length - 4))) {
+						var x = st[k];
+						var y = et[e];
+
+						var x_hour = x.slice(0, 2);
+						var y_hour = y.slice(0, 2);
+						var x_min = x.slice(3, 5);
+						var y_min = y.slice(3, 5);
+
+						var num = Math.floor((60 * (y_hour - x_hour) + (y_min - x_min)) / duration);
+						for (var i = 0; i < num; i++) {
+							addClassName(x_min, i, x, x_hour, $divright, $div, date);
+						}
+					}
+				})
+		};
+
+		function filterstarttime(dateindex, st, $divright, $div, date) {
+			Object.keys(st)
+				.forEach(k => {
+					var timeindex = k.charAt(k.length - 1);
+					if (timeindex == dateindex) {
+						endtimes.forEach(et => {
+							filterendtime(et, k, st, $divright, $div, date);
+						})
+					}
+				});
+		};
+
+		// FOR EACH DATE OPTION...  $DIVRIGHT (RIGHT SIDE FOR TIMES), AND $DATE
+		dates.forEach(d => {
+			Object.keys(d)
+				.forEach(key => {
+					//CREATE A DIV CALLED "$DIV" FOR EACH SECTION THAT INCLUDES ONE DATE + ALL ASSOCIATED TIMES
+					const $div = document.createElement('div');
+					$div.className = "availablesection";
+					
+					//CREATE A DIV CALLED "$DIVDATE" FOR EACH INDIVIDUAL DATE (LEFT SIDE)
+					const $divdate = document.createElement('div');
+					$divdate.className = "availabledate";
+					
+					//CREATE A DIV CALLED "$DIVRIGHT" FOR ALL TIMES ASSOCIATED WITH SAME DATE (RIGHT SIDE)
+					const $divright = document.createElement('div');
+					$divright.className = "divright";
+					
+					// DATEINDEX = LAST NUMBER OF EACH 
+					var dateindex = key.charAt(key.length - 1);
+					const $date = document.createElement('p');
+					
+					var date = d[key] + tzn;
+					var datestr = new Date(date).toDateString();
+					$date.innerHTML = datestr;
+					
+					$divdate.appendChild($date);
+					$div.appendChild($divdate);
+					starttimes.forEach(st => {
+						filterstarttime(dateindex, st, $divright, $div, date);
+						document.getElementById("dates-times")
+						.appendChild($div);
+					});
+				})
+		});
+		
+		tzninjection()
+	</script>
+
+</html>
