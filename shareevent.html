@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	    <meta charset="utf-8" />
+	    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	    <meta name="viewport" content="width=device-width, initial-scale=1" />
+	    <title>Qoom Scheduler</title>
+	    <link rel="stylesheet" href="/scheduler/style.css" />
+	    <link rel="preconnect" href="https://fonts.gstatic.com">
+		<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+	    <script src="/scheduler/script.js" defer></script>
+	</head>
+	<body>
+    	<header>QOOM SCHEDULER</header>
+		<hr>
+	    <main class="scheduler-container">
+			<h2>Your event has been created</h2>
+			<form id='form-three' action='/event?eventId={{EVENTID}}' method='post'>
+			    <section class="scheduler-box">			
+					<div id="eventinfo">
+						<table>
+							<tbody id="tbody">
+								<tr>
+									<th><div class="row">Event Name<div class="displayeventname"></div></div></th>
+									<td>{{EVENT NAME}}</td>
+								</tr>
+								<tr>
+									<th><div class="row">Location<div class="displaylocation"></div></div>
+									</th>
+									<td>{{LOCATION}}</td>
+								</tr>
+								<tr>
+									<th><div class="row">Description<div class="displayabout"></div></div>
+									</th>
+									<td>{{DESCRIPTION}}</td>
+								</tr>
+								<tr>
+									<th><div class="row">Duration<div class="displaylength"></div></div></th>
+									<td>{{MEETING LENGTH}} minutes</td>
+								</tr>
+								<tr id="slot_0">
+									<th rowspan="0"><div>Date & Time</div></th>
+								</tr>
+							</tbody>
+						</table>
+			    		
+			    		<div id="hiddenform">
+							<input type="hidden" name="Event" class="eventnameinput" value="{{EVENT NAME}}" />
+				    		<input type="hidden" name="Location" class="locationinput" value="{{LOCATION}}" />
+				    		<input type="hidden" name="About" class="aboutinput" value="{{DESCRIPTION}}" />
+				    		<input type="hidden" name="Meeting Length" class="lengthinput" value="{{MEETING LENGTH}}" />
+				    		<input type="hidden" name="Timezone" class="tzninput" value="" />
+			    		</div>
+					</div>
+			    </section>
+			    <section class="scheduler-box">
+			    	<div id="eventinfo">
+						<div class="row" style="justify-content: center;">Share your event!</div>
+						<a href="https://schedule.qoom.group/event/{{EVENTID}}">https://schedule.qoom.group/event/{{EVENTID}}</a>
+					</div>
+			    </section>
+			    <section class="buttons">
+			        <button type="button" class="btn-secondary" onclick="backbutton()">Back to Edit</button>
+			        <button type="submit" class="btn-primary">View Event Live</button>
+				</section>
+			</form>
+	    </main>
+	</body>
+	<script>
+		var dates = {{DATES}};
+    	var starttimes = {{STARTTIMES}};
+    	var endtimes = {{ENDTIMES}};
+    	var tzn = {{TIMEZONE}};
+    	
+    	var tznvalue = document.querySelector(".tzninput");
+    	tznvalue.value = tzn.toString();
+    	
+    	Object.keys(dates).forEach(d => {
+    		var dateindex = d.charAt(d.length-1);
+    		if (dateindex == 0){
+    			const $tdDate = document.createElement('td');
+    			const $tdTime = document.createElement('td');
+    			var datestr = new Date(dates[d] + tzn.toString());
+				datestr = datestr.toDateString()
+				$tdDate.innerHTML = datestr
+    			
+				Object.keys(starttimes).forEach(k => {
+					var timeindex = k.charAt(k.length-1);
+		    		if (timeindex == 0){
+		    			const $div = document.createElement('div');
+		    			Object.keys(endtimes).forEach(e => {
+		    				if (e.endsWith(k.slice(k.length - 4))){
+							    $div.innerHTML = starttimes[k] + " - " + endtimes[e] + " " + tzn.toString();
+							    $tdTime.appendChild($div);
+		    				}
+		    			})
+		    		}
+		    		
+		    		// ADD NEW START TIME VALUES TO HIDDEN FORM
+		    		startinput = document.createElement('input');
+					startinput.type = "hidden";
+					startinput.name = k;
+					startinput.class = "startinput";
+					startinput.value = starttimes[k];
+					document.getElementById("hiddenform").appendChild(startinput);
+				});
+				document.getElementById("slot_0").appendChild($tdDate);
+				document.getElementById("slot_0").appendChild($tdTime);
+			}
+			else {
+				const $tr = document.createElement('tr');
+				const $tdDate = document.createElement('td');
+				const $tdTime = document.createElement('td');
+				var datestr = new Date(dates[d] + tzn.toString());
+				datestr = datestr.toDateString()
+				$tdDate.innerHTML = datestr
+				
+				Object.keys(starttimes).forEach(k => {
+					var timeindex = k.charAt(k.length-1);
+		    		if (timeindex == dateindex){
+		    			const $div = document.createElement('div');
+		    			Object.keys(endtimes).forEach(e => {
+		    				if (e.endsWith(k.slice(k.length - 4))){
+							    $div.innerHTML = starttimes[k] + " - " + endtimes[e] + " " + tzn;
+							    $tdTime.appendChild($div);
+		    				}
+		    			})
+		    		}
+				});
+				
+				$tr.appendChild($tdDate);
+				$tr.appendChild($tdTime);
+				document.getElementById("tbody").appendChild($tr);
+			}
+			
+			// ADD NEW DATE VALUES TO HIDDEN FORM
+			dateinput = document.createElement('input');
+			dateinput.type = "hidden";
+			dateinput.name = d;
+			dateinput.className = "dateinput";
+			dateinput.value = datestr;
+			document.getElementById("hiddenform").appendChild(dateinput);
+		});
+		
+		// ADD NEW END TIME VALUES TO HIDDEN FORM
+		Object.keys(endtimes).forEach(e => {
+			endinput = document.createElement('input');
+			endinput.type = "hidden";
+			endinput.name = e;
+			endinput.className = "endinput";
+			endinput.value = endtimes[e];
+			document.getElementById("hiddenform").appendChild(endinput);
+		});
+    </script>
+</html>
