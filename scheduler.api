@@ -1,0 +1,197 @@
+const fs = require('fs')
+	, path = require('path')
+;
+
+function initialize() {}
+
+// EXPRESS JS FRAMEWORK: http://expressjs.com/
+function addRoutes(app) {
+	// Send data to save to the database and get data from the database
+	// req contains all the info the browser is sending the server
+	// res contains all the info the server will send the browser
+	
+	// GET INFO FROM PAGE #1-CREATE EVENT
+	app.get('/schedule', function(req, res) {
+		const filepath = 'scheduler/createevent.html';
+		const completepath = path.join(__dirname, '../../libs', filepath);
+		res.sendFile(completepath);
+	})
+	
+	// GET INFO FROM PAGE #2-AVAILABILITY
+	app.get('/schedule/availability', function(req, res) {
+		const filepath = 'scheduler/scheduleravailability.html';
+		const completepath = path.join(__dirname, '../../libs', filepath);
+		res.sendFile(completepath);
+	})
+	
+	// GET INFO FROM PAGE #3-SHARE EVENT
+	app.get('/schedule/shareevent', function(req, res) {
+		const filepath = 'scheduler/shareevent.html';
+		const completepath = path.join(__dirname, '../../libs', filepath);
+		res.sendFile(completepath);
+	})
+	
+	// GET INFO FROM PAGE #4-BOOK APPOINTMENT
+	app.get('/bookappointment', function(req, res) {
+		const filepath = 'scheduler/bookappointment.html';
+		const completepath = path.join(__dirname, '../../libs', filepath);
+		res.sendFile(completepath);
+	})
+	
+	// GET INFO FROM PAGE #4-BOOK APPOINTMENT
+	app.get('/thankyou', function(req, res) {
+		const filepath = 'scheduler/thankyou.html';
+		const completepath = path.join(__dirname, '../../libs', filepath);
+		res.sendFile(completepath);
+	})
+	
+	// SEND INFO FROM PAGE #1 to PAGE #2-AVAILABILITY
+	app.post('/schedule/availability', function(req, res) {
+		const filepath = 'scheduler/scheduleravailability.html';
+		const completepath = path.join(__dirname, '../../libs', filepath);
+		let contents = fs.readFileSync(completepath, 'utf8');
+		contents = contents.replace(/{{EVENT NAME}}/g, req.body.Event) // REGEX (regular expression)
+		contents = contents.replace(/{{LOCATION}}/g, req.body.Location)
+		contents = contents.replace(/{{DESCRIPTION}}/g, req.body.About)
+		const meetingminutes = Array.isArray(req.body['Meeting Length']) ?
+		req.body['Meeting Length'].filter(item => !!item) : req.body['Meeting Length'];
+		contents = contents.replace(/{{MEETING LENGTH}}/g, meetingminutes);
+		res.send(contents);	
+	})
+	
+	// SEND INFO FROM PAGE #2 to PAGE #3-SHARE EVENT
+	app.post('/schedule/shareevent', function(req, res) {
+		const filepath = 'scheduler/shareevent.html';
+		const completepath = path.join(__dirname, '../../libs', filepath);
+		let contents = fs.readFileSync(completepath, 'utf8');
+		contents = contents.replace(/{{EVENT NAME}}/g, req.body.Event)
+		contents = contents.replace(/{{LOCATION}}/g, req.body.Location)
+		contents = contents.replace(/{{DESCRIPTION}}/g, req.body.About)
+		contents = contents.replace(/{{MEETING LENGTH}}/g, req.body['Meeting Length'])
+		const timezone = Array.isArray(req.body.Timezone) ?
+		req.body.Timezone.filter(item => !!item) : req.body.Timezone;
+		contents = contents.replace(/{{TIMEZONE}}/g, JSON.stringify(timezone));
+		
+		const dates = Object.keys(req.body).filter(k => k.startsWith('Date')).reduce((o, k) => {
+			o[k] = req.body[k];
+			return o;
+		}, {});
+		const startTimes = Object.keys(req.body).filter(k => k.startsWith('Start Time')).reduce((o, k) => {
+			o[k] = req.body[k];
+			return o;
+		}, {});
+		const endTimes = Object.keys(req.body).filter(k => k.startsWith('End Time')).reduce((o, k) => {
+			o[k] = req.body[k];
+			return o;
+		}, {});
+		contents = contents.replace('{{DATES}}', JSON.stringify(dates) );
+		contents = contents.replace('{{STARTTIMES}}', JSON.stringify(startTimes) );
+		contents = contents.replace('{{ENDTIMES}}', JSON.stringify(endTimes) );
+		
+		const schema = require('./schemas.js');
+		
+		// model is the variable we use to talk to the database or spreadsheet
+		schema.schedule.then(model => {
+			const row = new model({
+				Location: req.body.Location
+				, Event: req.body.Event
+				, About: req.body.About
+				, MeetingLength: req.body['Meeting Length']
+				, Timezone: timezone
+				, Dates: dates
+				, StartTimes: startTimes
+				, EndTimes: endTimes
+			});
+			row.save((err) => {
+				if(err) return res.send(err);
+				res.send(contents.replace(/{{EVENTID}}/g, row._id.toString()));	
+				//res.redirect(`/event/${row._id.toString()}`);
+			})
+		})
+	})
+
+	// SEND INFO FROM PAGE #3 to PAGE #4-BOOK APPOINTMENT
+	app.post('/event', function(req, res) {
+		const filepath = 'scheduler/bookappointment.html';
+		const completepath = path.join(__dirname, '../../libs', filepath);
+		const eventId = req.query.eventId;
+		if(!eventId) return res.send('NO EVENT ID');
+		/*
+		let contents = fs.readFileSync(completepath, 'utf8');
+		contents = contents.replace(/{{EVENT NAME}}/g, req.body.Event)
+		contents = contents.replace(/{{LOCATION}}/g, req.body.Location)
+		contents = contents.replace(/{{DESCRIPTION}}/g, req.body.About)
+		contents = contents.replace(/{{MEETING LENGTH}}/g, req.body['Meeting Length'])
+		const timezone = Array.isArray(req.body.Timezone) ?
+		req.body.Timezone.filter(item => !!item) : req.body.Timezone;
+		contents = contents.replace(/{{TIMEZONE}}/g, JSON.stringify(timezone));
+		
+		const dates = Object.keys(req.body).filter(k => k.startsWith('Date')).reduce((o, k) => {
+			o[k] = req.body[k];
+			return o;
+		}, {});
+		const startTimes = Object.keys(req.body).filter(k => k.startsWith('Start Time')).reduce((o, k) => {
+			o[k] = req.body[k];
+			return o;
+		}, {});
+		const endTimes = Object.keys(req.body).filter(k => k.startsWith('End Time')).reduce((o, k) => {
+			o[k] = req.body[k];
+			return o;
+		}, {});
+
+		*/
+		const schema = require('./schemas.js');
+		
+		// model is the variable we use to talk to the database or spreadsheet
+		schema.schedule.then(model => {
+			model.findOneAndUpdate({_id: eventId}, {$set: {Name: req.body.Name, Email: req.body.Email, Info: req.body.Info}}, (err) => {
+				if(err) return res.send(err);
+				res.redirect(`/event/${eventId}`);				
+			})
+		})
+	})
+	
+	app.get('/event/:id', (req, res, next) => {
+		const schema = require('./schemas.js');
+		
+		// model is the variable we use to talk to the database or spreadsheet
+		schema.schedule.then(model => {
+			model.findOne({_id: req.params.id}).lean().exec((err, doc) => {
+				if(err) return res.send({error: err});
+				if(!doc) return res.send({error: 'No event found'});
+				
+				const filepath = 'scheduler/bookappointment.html';
+				const completepath = path.join(__dirname, '../../libs', filepath);
+				let contents = fs.readFileSync(completepath, 'utf8');
+				contents = contents.replace(/{{EVENT NAME}}/g, doc.Event)
+				contents = contents.replace(/{{LOCATION}}/g, doc.Location)
+				contents = contents.replace(/{{DESCRIPTION}}/g, doc.About)
+				contents = contents.replace(/{{MEETING LENGTH}}/g, doc.MeetingLength)
+				contents = contents.replace(/{{TIMEZONE}}/g, JSON.stringify(doc.Timezone));
+				
+				const dates = doc.Dates
+				const startTimes = doc.StartTimes
+				const endTimes = doc.EndTimes
+				contents = contents.replace('{{DATES}}', JSON.stringify(dates) );
+				contents = contents.replace('{{STARTTIMES}}', JSON.stringify(startTimes) );
+				contents = contents.replace('{{ENDTIMES}}', JSON.stringify(endTimes) );
+				//TODO: Save data in the database
+				
+				res.send(contents);
+			})
+		})
+	})
+	
+	// SEND INFO FROM PAGE #4 to PAGE #5-THANK YOU
+	app.post('/thankyou', function(req, res) {
+		const filepath = 'scheduler/thankyou.html';
+		const completepath = path.join(__dirname, '../../libs', filepath);
+		let contents = fs.readFileSync(completepath, 'utf8');
+		res.send(contents);	
+	})
+
+}
+
+module.exports = {
+	initialize, addRoutes
+};
